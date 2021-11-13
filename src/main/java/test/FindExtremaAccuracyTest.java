@@ -51,7 +51,7 @@ import org.marlin.math.util.WelfordVariance;
 public class FindExtremaAccuracyTest extends BaseTest {
 
     private final static CurveType TEST_TYPE = CurveType.CUBIC;
-    private final static TestDiff TEST_MODE = TestDiff.DIST; // EDGE_OR
+    private final static TestDiff TEST_MODE = TestDiff.EDGE_OR; // DIST
 
     private final static boolean DEBUG = false;
     private final static boolean TRACE = false;
