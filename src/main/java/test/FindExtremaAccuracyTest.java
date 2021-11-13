@@ -51,8 +51,13 @@ import org.marlin.math.util.WelfordVariance;
 public class FindExtremaAccuracyTest extends BaseTest {
 
     private final static CurveType TEST_TYPE = CurveType.CUBIC;
+    private final static TestDiff TEST_MODE = TestDiff.DIST; // EDGE_OR
 
     private final static boolean DEBUG = false;
+    private final static boolean TRACE = false;
+
+    private final static boolean DEBUG_QUAD_SOLVER = false;
+
     private final static boolean USE_PATH_ITER = false;
 
     private final static int N = 1000000;
@@ -62,11 +67,17 @@ public class FindExtremaAccuracyTest extends BaseTest {
     private static final WelfordVariance condStats = new WelfordVariance();
     /** statistics on ratio(delta / ucond) */
     private static final WelfordVariance ratioCondStats = new WelfordVariance();
+    /** statistics on n * ulp(x) */
+    private static final WelfordVariance ulpXStats = new WelfordVariance();
 
     private static final EnumMap<Result, AtomicInteger> results = new EnumMap<Result, AtomicInteger>(Result.class);
 
     enum CurveType {
         QUAD, CUBIC;
+    }
+
+    enum TestDiff {
+        DIST, EDGE_OR;
     }
 
     enum Result {
@@ -87,14 +98,24 @@ public class FindExtremaAccuracyTest extends BaseTest {
 
         CurveType ctype = TEST_TYPE;
         System.out.println("TYPE: " + ctype);
+        System.out.println("TEST_MODE: " + TEST_MODE);
 
         if (DEBUG) {
             resetStats();
 
-            // m 0.0 0.0 c 2.63209572625E8 0.3 -4.700001119893978E8 0.6 0.0 1.0 
-            test(ctype, 0, 0.0, 0.0, 2.63209572625E8, 0.3, -4.700001119893978E8, 0.6, 0.0, 1.0);
+            // Bad cubic:
+            // t is inacurrate != 0.161:
+            /*
+            tExtrema:   [0.7454713624448268522743715, 0.161]
+            tExtrema_d: [0.7454713624448269, 0.16051708637880857]
+            t: 0.7454713624448269 delta(t): -7.152438593426965E-17 nUlp: -0.6442343956829607
+            t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848E13
+             */
+            test(CurveType.CUBIC, 0, 0.0, 0.0, 2.63209572625E8, 0.3, -4.700001119893978E8, 0.6, 0.0, 1.0);
 
-            test(ctype, 0, 1e9);
+            if (false) {
+                test(ctype, 0, 1e9);
+            }
             return;
         }
 
@@ -144,14 +165,17 @@ public class FindExtremaAccuracyTest extends BaseTest {
     }
 
     private static void dumpStats(boolean verbose) {
-        System.out.println("maxCond:   " + condStats.max());
-        System.out.println("ratioCond: " + ratioCondStats.max());
+        System.out.println("maxCond:       " + condStats.max());
+        final double ucondMax = Math.ulp(condStats.max());
+        System.out.println("ulp(maxCond):  " + ucondMax);
+        System.out.println("ratioCond:     " + ratioCondStats.max());
 
         if (verbose) {
-            System.out.println("stats(cond) : " + condStats);
-            System.out.println("stats(ratio): " + ratioCondStats);
+            System.out.println("stats(cond) :  " + condStats);
+            System.out.println("stats(ratio):  " + ratioCondStats);
+            System.out.println("stats(ulp(x)): " + ulpXStats);
 
-            System.out.println("stats(results):");
+            System.out.println("result stats:");
             for (Result r : Result.values()) {
                 System.out.println(r.toString() + ":\t" + results.get(r));
             }
@@ -212,15 +236,15 @@ public class FindExtremaAccuracyTest extends BaseTest {
         final BigDecimal minX = xExtrema[0];
         final BigDecimal maxX = xExtrema[1];
 
+        final double[] coeff_d = new double[4];
+        final double[] deriv_coeff_d = new double[3];
+        final double[] tExtrema_d = new double[2];
+        final double[] xExtrema_d = new double[2];
+
         final double minX_d;
         final double maxX_d;
 
         if (!USE_PATH_ITER) {
-            final double[] coeff_d = new double[4];
-            final double[] deriv_coeff_d = new double[3];
-            final double[] tExtrema_d = new double[2];
-            final double[] xExtrema_d = new double[2];
-
             switch (ctype) {
                 case QUAD:
                     findExtrema_d(x0, cx1, x3, coeff_d, deriv_coeff_d, tExtrema_d, xExtrema_d);
@@ -286,21 +310,45 @@ public class FindExtremaAccuracyTest extends BaseTest {
         final double deltaMin = minX.subtract(obsMinX).abs().doubleValue();
         final double deltaMax = maxX.subtract(obsMaxX).abs().doubleValue();
 
-        final double delta = Math.max((badMin ? deltaMin : 0.0), (badMax ? deltaMax : 0.0));
-        final double uratio = delta / ucond;
+        final double delta;
+        switch (TEST_MODE) {
+            case EDGE_OR:
+                delta = Math.max((badMin ? deltaMin : 0.0), (badMax ? deltaMax : 0.0));
+                break;
+            default:
+            case DIST:
+                delta = Math.max(deltaMin, deltaMax);
+        }
 
         // update stats:
         condStats.add(cond);
         if (delta > 0.0) {
+            final double uratio = delta / ucond;
+
             ratioCondStats.add(uratio);
+
+            final double nUlpMin = deltaMin / Math.ulp(minX_d);
+            final double nUlpMax = deltaMax / Math.ulp(maxX_d);
+
+            final double nUlp;
+            switch (TEST_MODE) {
+                case EDGE_OR:
+                    nUlp = Math.max((badMin ? nUlpMin : 0.0), (badMax ? nUlpMax : 0.0));
+                    break;
+                default:
+                case DIST:
+                    nUlp = Math.max(nUlpMin, nUlpMax);
+            }
+            ulpXStats.add(nUlp);
         }
 
-        if (!DEBUG && delta <= ucond) {
+        if (!TRACE && (delta <= ucond)) {
+            // test OK
             return;
         }
 
         System.out.println("Examining (trial #" + trial + "), " + result + ", "
-                + (ctype == CurveType.QUAD ? toString(x0, y0, cx1, cy1, x3, y3)
+                + (ctype == CurveType.QUAD ? toString(x0, y0, cx1, cy1, 0.0, 0.0, x3, y3)
                         : toString(x0, y0, cx1, cy1, cx2, cy2, x3, y3))
         );
 
@@ -315,7 +363,21 @@ public class FindExtremaAccuracyTest extends BaseTest {
         System.out.println("coeff[1]: " + coeff[1]);
         System.out.println("coeff[0]: " + coeff[0]);
 
-        System.out.println("tExtrema: " + Arrays.toString(tExtrema));
+        System.out.println("dcoeff[2]: " + deriv_coeff[2]);
+        System.out.println("dcoeff[1]: " + deriv_coeff[1]);
+        System.out.println("dcoeff[0]: " + deriv_coeff[0]);
+
+        System.out.println("tExtrema:   " + Arrays.toString(tExtrema));
+        System.out.println("tExtrema_d: " + Arrays.toString(tExtrema_d));
+
+        for (int i = 0; i < 2; i++) {
+            final BigDecimal t = tExtrema[i];
+            if (t != null) {
+                final double deltaT = t.subtract(new BigDecimal(tExtrema_d[i])).doubleValue();
+                final double nUlpT = deltaT / Math.ulp(tExtrema_d[i]);
+                System.out.println("t: " + tExtrema_d[i] + " delta(t): " + deltaT + " nUlp: " + nUlpT);
+            }
+        }
 
         final String leftStr = toUniformString(minX);
         final String rightStr = toUniformString(maxX);
@@ -360,6 +422,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
     // Find Extrema implementations (High-Accuracy) based on BigDecimal
     private final static BigDecimal TWO = new BigDecimal(2.0);
     private final static BigDecimal THREE = new BigDecimal(3.0);
+    private final static BigDecimal HALF_NEG = new BigDecimal(-0.5);
 
     private static void findExtrema(final double x1, final double x2, final double x3,
                                     final BigDecimal[] coeff, final BigDecimal[] deriv_coeff,
@@ -387,9 +450,10 @@ public class FindExtremaAccuracyTest extends BaseTest {
             // The line has degenerated to a constant.
             t = null;
         } else {
-            t = deriv_coeff[0].negate().divide(deriv_coeff[1], RoundingMode.HALF_EVEN);
+            t = deriv_coeff[0].negate().divide(deriv_coeff[1]);
         }
         tExtrema[0] = t;
+        tExtrema[1] = null;
 
         BigDecimal minX = bx1;
         BigDecimal maxX = bx1;
@@ -427,6 +491,8 @@ public class FindExtremaAccuracyTest extends BaseTest {
         deriv_coeff[1] = coeff[2].multiply(TWO);
         deriv_coeff[0] = coeff[1];
 
+        tExtrema[0] = null;
+        tExtrema[1] = null;
         final int tExtremaCount = solveQuadratic(deriv_coeff, tExtrema);
 
         BigDecimal minX = bx1;
@@ -462,10 +528,13 @@ public class FindExtremaAccuracyTest extends BaseTest {
                 // The line has degenerated to a constant.
                 return -1;
             }
-            res[roots++] = c.negate().divide(b, RoundingMode.HALF_EVEN);
+            res[roots++] = c.negate().divide(b);
         } else {
             // From Numerical Recipes, 5.6, Quadratic and Cubic Equations
             BigDecimal d = b.multiply(b).add(new BigDecimal(-4.0).multiply(a).multiply(c));
+            if (DEBUG_QUAD_SOLVER) {
+                System.out.println("d: " + d);
+            }
             if (d.compareTo(ZERO) < 0) {
                 // If d < 0.0, then there are no roots
                 return 0;
@@ -476,6 +545,10 @@ public class FindExtremaAccuracyTest extends BaseTest {
         	at java.base/java.math.BigDecimal.sqrt(BigDecimal.java:2264)
              */
             d = d.sqrt(MathContext.DECIMAL128);
+            if (DEBUG_QUAD_SOLVER) {
+                System.out.println("sqrt(d): " + d);
+                System.out.println("b:       " + b);
+            }
             // For accuracy, calculate one root using:
             //     (-b +/- d) / 2a
             // and the other using:
@@ -484,7 +557,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
             if (b.compareTo(ZERO) < 0) {
                 d = d.negate();
             }
-            final BigDecimal q = b.add(d).divide(TWO.negate(), RoundingMode.HALF_EVEN);
+            final BigDecimal q = HALF_NEG.multiply(b.add(d)); // no div
             // We already tested a for being 0 above
             res[roots++] = q.divide(a, RoundingMode.HALF_EVEN);
 
@@ -521,6 +594,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
             t = -deriv_coeff[0] / deriv_coeff[1];
         }
         tExtrema[0] = t;
+        tExtrema[1] = Double.NaN;
 
         double minX = x1;
         double maxX = x1;
@@ -553,7 +627,9 @@ public class FindExtremaAccuracyTest extends BaseTest {
         deriv_coeff[1] = 2.0 * coeff[2];
         deriv_coeff[0] = coeff[1];
 
-        final int tExtremaCount = QuadCurve2D.solveQuadratic(deriv_coeff, tExtrema);
+        tExtrema[0] = Double.NaN;
+        tExtrema[1] = Double.NaN;
+        final int tExtremaCount = solveQuadratic(deriv_coeff, tExtrema);
 
         double minX = x1;
         double maxX = x1;
@@ -573,6 +649,88 @@ public class FindExtremaAccuracyTest extends BaseTest {
         }
         range[0] = minX;
         range[1] = maxX;
+    }
+
+    // Copied from QuadCurve2D.solveQuadratic
+    public static int solveQuadratic(double[] eqn, double[] res) {
+        double a = eqn[2];
+        double b = eqn[1];
+        double c = eqn[0];
+
+        int roots = 0;
+        if (a == 0.0) {
+            // The quadratic parabola has degenerated to a line.
+            if (b == 0.0) {
+                // The line has degenerated to a constant.
+                return -1;
+            }
+            res[roots++] = -c / b;
+        } else {
+            // From Numerical Recipes, 5.6, Quadratic and Cubic Equations
+            double d = b * b - 4.0 * a * c;
+            if (DEBUG_QUAD_SOLVER) {
+                System.out.println("d:      " + d);
+                d += Math.ulp(d);
+                System.out.println("d+1ulp: " + d);
+            }
+            /*
+            double d_alt = diff_of_products(b, b, a * 4.0, c);
+            double d_alt2 = diff_of_products(b, b, a, c * 4.0);
+
+            System.out.println("d_alt : " + d_alt);
+            System.out.println("d_alt2: " + d_alt2);
+             */
+            if (d < 0.0) {
+                // If d < 0.0, then there are no roots
+                return 0;
+            }
+            d = Math.sqrt(d);
+            if (DEBUG_QUAD_SOLVER) {
+                System.out.println("sqrt(d): " + d);
+                System.out.println("b:       " + b);
+            }
+            // For accuracy, calculate one root using:
+            //     (-b +/- d) / 2a
+            // and the other using:
+            //     2c / (-b +/- d)
+            // Choose the sign of the +/- so that b+d gets larger in magnitude
+            if (b < 0.0) {
+                d = -d;
+            }
+
+            // double q = (b + d) / -2.0;
+            double q = -0.5 * (b + d); // no div
+            /*
+            double q = (b + d) / -2.0;
+            t: 0.7454713624448269 delta(t): -7.152438643426965E-17 nUlp: -0.6442344001865603
+            t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848E
+
+            double q = -0.5 * (b + d); // LBO
+            t: 0.7454713624448269 delta(t): -7.152438643426965E-17 nUlp: -0.6442344001865603
+            t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848
+             */
+            // We already tested a for being 0 above
+            res[roots++] = q / a;
+            if (q != 0.0) {
+                res[roots++] = c / q;
+            }
+        }
+        return roots;
+    }
+
+    /*
+     * diff_of_products() computes a*b-c*d with a maximum error <= 1.5 ulp
+     * 
+     * Claude-Pierre Jeannerod, Nicolas Louvet, and Jean-Michel Muller, 
+     * "Further Analysis of Kahan's Algorithm for the Accurate Computation 
+     * of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284, 
+     * Oct. 2013, pp. 2245-2264
+     */
+    static double diff_of_products(double a, double b, double c, double d) {
+        double w = d * c;
+        double e = Math.fma(-d, c, w);
+        double f = Math.fma(a, b, -w);
+        return f + e;
     }
 
     /**
