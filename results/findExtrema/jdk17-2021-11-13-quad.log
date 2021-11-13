@@ -1,0 +1,518 @@
+./test.sh 
+openjdk version "17" 2021-09-14
+OpenJDK Runtime Environment (build 17+35-2724)
+OpenJDK 64-Bit Server VM (build 17+35-2724, mixed mode, sharing)
+-------------------
+FindExtremaAccuracyTest: start
+USE_PATH_ITER: false
+N: 1000000
+TYPE: QUAD
+-------------------
+offset value: 0.0
+random scale: 10.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   19.99998258901072
+ratioCond: NaN
+stats(cond) : [1000000: µ=10.000816425935836 σ=5.773008267587746 (57.72536982696921 %) rms=15.773824693523583 min=2.772461374789259E-5 max=19.99998258901072 sum=1.0000816425935837E7]
+stats(ratio): [0: µ=NaN σ=NaN (NaN %) rms=NaN min=NaN max=NaN sum=NaN]
+stats(results):
+PASSING:	1000000
+FAIL_LEFT:	0
+FAIL_RIGHT:	0
+FAIL_BOTH:	0
+-------------------
+offset value: 0.0
+random scale: 1.0E-6
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1.999998258901072E-6
+ratioCond: NaN
+stats(cond) : [1000000: µ=1.000081642593611E-6 σ=5.773008267587835E-7 (57.72536982696853 %) rms=1.5773824693523945E-6 min=2.772461374502222E-12 max=1.999998258901072E-6 sum=1.000081642593611]
+stats(ratio): [0: µ=NaN σ=NaN (NaN %) rms=NaN min=NaN max=NaN sum=NaN]
+stats(results):
+PASSING:	1000000
+FAIL_LEFT:	0
+FAIL_RIGHT:	0
+FAIL_BOTH:	0
+-------------------
+offset value: 0.0
+random scale: 1000000.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1999998.2589010717
+ratioCond: NaN
+stats(cond) : [1000000: µ=1000081.6425936571 σ=577300.8267587598 (57.72536982696349 %) rms=1577382.469352417 min=2.772461374755949 max=1999998.2589010717 sum=1.0000816425936571E12]
+stats(ratio): [0: µ=NaN σ=NaN (NaN %) rms=NaN min=NaN max=NaN sum=NaN]
+stats(results):
+PASSING:	1000000
+FAIL_LEFT:	0
+FAIL_RIGHT:	0
+FAIL_BOTH:	0
+-------------------
+offset value: 0.0
+random scale: 1.0E9
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1.999998258901072E9
+ratioCond: NaN
+stats(cond) : [1000000: µ=1.0000816425936327E9 σ=5.773008267587751E8 (57.72536982696643 %) rms=1.577382469352408E9 min=2772.461374759674 max=1.999998258901072E9 sum=1.0000816425936328E15]
+stats(ratio): [0: µ=NaN σ=NaN (NaN %) rms=NaN min=NaN max=NaN sum=NaN]
+stats(results):
+PASSING:	1000000
+FAIL_LEFT:	0
+FAIL_RIGHT:	0
+FAIL_BOTH:	0
+-------------------
+offset value: 1000000.0
+random scale: 10.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1000019.9999825889
+ratioCond: 0.5
+stats(cond) : [1000000: µ=1000010.0008164014 σ=5.773008267563302 (5.772950533344924E-4 %) rms=1000015.773824669 min=1000000.0000277245 max=1000019.9999825889 sum=1.0000100008164015E12]
+stats(ratio): [250603: µ=0.5 σ=0.0 (0.0 %) rms=0.5 min=0.5 max=0.5 sum=125301.5]
+stats(results):
+PASSING:	749397
+FAIL_LEFT:	125337
+FAIL_RIGHT:	125266
+FAIL_BOTH:	0
+-------------------
+offset value: 1000000.0
+random scale: 0.001
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1000000.0019999985
+ratioCond: 0.5
+stats(cond) : [1000000: µ=1000000.0010000848 σ=5.773008417582043E-4 (5.773008411808545E-8 %) rms=1000000.0015773856 min=1000000.0000000028 max=1000000.0019999985 sum=1.0000000010000848E12]
+stats(ratio): [249781: µ=0.5 σ=0.0 (0.0 %) rms=0.5 min=0.5 max=0.5 sum=124890.5]
+stats(results):
+PASSING:	750219
+FAIL_LEFT:	125030
+FAIL_RIGHT:	124751
+FAIL_BOTH:	0
+-------------------
+offset value: 1000000.0
+random scale: 1000000.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2999998.2589010717
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2000081.642593685 σ=577300.8267587594 (28.86386307761526 %) rms=2577382.4693524446 min=1000002.7724613748 max=2999998.2589010717 sum=2.000081642593685E12]
+stats(ratio): [138751: µ=0.25429861766762457 σ=0.13032386164910192 (51.248356300323614 %) rms=0.3846224793167265 min=0.0625 max=0.5 sum=35284.187500000575]
+stats(results):
+PASSING:	861249
+FAIL_LEFT:	79355
+FAIL_RIGHT:	59396
+FAIL_BOTH:	0
+-------------------
+offset value: 1000000.0
+random scale: 1.0E9
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.000998258901072E9
+ratioCond: NaN
+stats(cond) : [1000000: µ=1.0010816425936327E9 σ=5.773008267587751E8 (57.66770682789534 %) rms=1.578382469352408E9 min=1002772.4613747597 max=2.000998258901072E9 sum=1.0010816425936328E15]
+stats(ratio): [0: µ=NaN σ=NaN (NaN %) rms=NaN min=NaN max=NaN sum=NaN]
+stats(results):
+PASSING:	1000000
+FAIL_LEFT:	0
+FAIL_RIGHT:	0
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E9
+random scale: 10.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1.0000000199999824E9
+ratioCond: 0.5
+stats(cond) : [1000000: µ=1.0000000100008005E9 σ=5.7730082520909525 (5.773008194356249E-7 %) rms=1.0000000157738087E9 min=1.0000000000000277E9 max=1.0000000199999824E9 sum=1.0000000100008005E15]
+stats(ratio): [249804: µ=0.5 σ=0.0 (0.0 %) rms=0.5 min=0.5 max=0.5 sum=124902.0]
+stats(results):
+PASSING:	750196
+FAIL_LEFT:	124721
+FAIL_RIGHT:	125083
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E9
+random scale: 1000000.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   1.0019999982589011E9
+ratioCond: 0.5
+stats(cond) : [1000000: µ=1.0010000816426122E9 σ=577300.8267587859 (0.05767240556179095 %) rms=1.001577382469371E9 min=1.0000000027724614E9 max=1.0019999982589011E9 sum=1.0010000816426122E15]
+stats(ratio): [249793: µ=0.5 σ=0.0 (0.0 %) rms=0.5 min=0.5 max=0.5 sum=124896.5]
+stats(results):
+PASSING:	750207
+FAIL_LEFT:	125382
+FAIL_RIGHT:	124411
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E9
+random scale: 1.0E9
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.9999982589010715E9
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425936503E9 σ=5.773008267587758E8 (28.863863077616582 %) rms=2.577382469352426E9 min=1.0000027724613748E9 max=2.9999982589010715E9 sum=2.0000816425936502E15]
+stats(ratio): [140598: µ=0.24720079588614363 σ=0.12593943257423057 (50.946208373955265 %) rms=0.3731402284603742 min=0.0625 max=0.5 sum=34755.93750000002]
+stats(results):
+PASSING:	859402
+FAIL_LEFT:	82277
+FAIL_RIGHT:	58321
+FAIL_BOTH:	0
+-------------------
+offset value: 1000000.0
+random scale: 1000000.0
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2999998.2589010717
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2000081.642593685 σ=577300.8267587594 (28.86386307761526 %) rms=2577382.4693524446 min=1000002.7724613748 max=2999998.2589010717 sum=2.000081642593685E12]
+stats(ratio): [138751: µ=0.25429861766762457 σ=0.13032386164910192 (51.248356300323614 %) rms=0.3846224793167265 min=0.0625 max=0.5 sum=35284.187500000575]
+stats(results):
+PASSING:	861249
+FAIL_LEFT:	79355
+FAIL_RIGHT:	59396
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E7
+random scale: 1.0E7
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.9999982589010715E7
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425936677E7 σ=5773008.267587642 (28.86386307761575 %) rms=2.577382469352432E7 min=1.0000027724613748E7 max=2.9999982589010715E7 sum=2.0000816425936676E13]
+stats(ratio): [195783: µ=0.27528500942370454 σ=0.1393655587619408 (50.62591641066677 %) rms=0.41465056818564533 min=0.125 max=0.5 sum=53896.12500000115]
+stats(results):
+PASSING:	804217
+FAIL_LEFT:	112996
+FAIL_RIGHT:	82787
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E8
+random scale: 1.0E8
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.9999982589010715E8
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425935894E8 σ=5.773008267587816E7 (28.863863077617747 %) rms=2.577382469352371E8 min=1.000002772461375E8 max=2.9999982589010715E8 sum=2.0000816425935894E14]
+stats(ratio): [176026: µ=0.24114938986285933 σ=0.11645950881123804 (48.29351170138481 %) rms=0.3576088986740974 min=0.0625 max=0.5 sum=42448.56249999968]
+stats(results):
+PASSING:	823974
+FAIL_LEFT:	111683
+FAIL_RIGHT:	64343
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E9
+random scale: 1.0E9
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.9999982589010715E9
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425936503E9 σ=5.773008267587758E8 (28.863863077616582 %) rms=2.577382469352426E9 min=1.0000027724613748E9 max=2.9999982589010715E9 sum=2.0000816425936502E15]
+stats(ratio): [140598: µ=0.24720079588614363 σ=0.12593943257423057 (50.946208373955265 %) rms=0.3731402284603742 min=0.0625 max=0.5 sum=34755.93750000002]
+stats(results):
+PASSING:	859402
+FAIL_LEFT:	82277
+FAIL_RIGHT:	58321
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E10
+random scale: 1.0E10
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.999998258901072E10
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.000081642593674E10 σ=5.773008267587708E9 (28.86386307761599 %) rms=2.577382469352445E10 min=1.0000027724613747E10 max=2.999998258901072E10 sum=2.000081642593674E16]
+stats(ratio): [189302: µ=0.2815738872278182 σ=0.14394209243000666 (51.12054027706937 %) rms=0.42551597965782484 min=0.125 max=0.5 sum=53302.50000000044]
+stats(results):
+PASSING:	810698
+FAIL_LEFT:	109082
+FAIL_RIGHT:	80220
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E11
+random scale: 1.0E11
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.999998258901072E11
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.000081642593705E11 σ=5.773008267587765E10 (28.86386307761582 %) rms=2.5773824693524817E11 min=1.0000027724613745E11 max=2.999998258901072E11 sum=2.00008164259370528E17]
+stats(ratio): [184192: µ=0.24537880309677082 σ=0.11539571449695618 (47.02758063884076 %) rms=0.36077451759372703 min=0.0625 max=0.5 sum=45196.81250000041]
+stats(results):
+PASSING:	815808
+FAIL_LEFT:	114028
+FAIL_RIGHT:	70164
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E12
+random scale: 1.0E12
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.9999982589010723E12
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425936914E12 σ=5.773008267587659E11 (28.863863077615488 %) rms=2.577382469352457E12 min=1.000002772461375E12 max=2.9999982589010723E12 sum=2.00008164259369139E18]
+stats(ratio): [142419: µ=0.24023743320764376 σ=0.12066505171979434 (50.22741464919842 %) rms=0.3609024849274381 min=0.0625 max=0.5 sum=34214.37499999942]
+stats(results):
+PASSING:	857581
+FAIL_LEFT:	85902
+FAIL_RIGHT:	56517
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E13
+random scale: 1.0E13
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.999998258901072E13
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425936535E13 σ=5.77300826758775E12 (28.863863077616493 %) rms=2.5773824693524285E13 min=1.000002772461375E13 max=2.999998258901072E13 sum=2.0000816425936536E19]
+stats(ratio): [181278: µ=0.289846947781856 σ=0.1489519642634092 (51.38986813672198 %) rms=0.4387989120452652 min=0.125 max=0.5 sum=52542.87499999929]
+stats(results):
+PASSING:	818722
+FAIL_LEFT:	103634
+FAIL_RIGHT:	77644
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E14
+random scale: 1.0E14
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.9999982589010725E14
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.000081642593631E14 σ=5.773008267587867E13 (28.863863077617403 %) rms=2.5773824693524175E14 min=1.000002772461375E14 max=2.9999982589010725E14 sum=2.000081642593631E20]
+stats(ratio): [193341: µ=0.24940454947476517 σ=0.11416248343783417 (45.77401802743986 %) rms=0.36356703291259934 min=0.0625 max=0.5 sum=48220.125000000575]
+stats(results):
+PASSING:	806659
+FAIL_LEFT:	117048
+FAIL_RIGHT:	76293
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E15
+random scale: 1.0E15
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.999998258901072E15
+ratioCond: 0.5
+stats(cond) : [1000000: µ=2.0000816425935548E15 σ=5.77300826758768E14 (28.863863077617566 %) rms=2.577382469352323E15 min=1.000002772461375E15 max=2.999998258901072E15 sum=2.0000816425935548E21]
+stats(ratio): [143485: µ=0.23263494441927993 σ=0.11489296639068346 (49.387664728309645 %) rms=0.34752791080996337 min=0.0625 max=0.5 sum=33379.62500000038]
+stats(results):
+PASSING:	856515
+FAIL_LEFT:	88600
+FAIL_RIGHT:	54885
+FAIL_BOTH:	0
+-------------------
+offset value: 1.0E16
+random scale: 1.0E16
+Iteration 0 ---
+Iteration 100000 ---
+Iteration 200000 ---
+Iteration 300000 ---
+Iteration 400000 ---
+Iteration 500000 ---
+Iteration 600000 ---
+Iteration 700000 ---
+Iteration 800000 ---
+Iteration 900000 ---
+Test done ---
+maxCond:   2.999998258901072E16
+ratioCond: NaN
+stats(cond) : [1000000: µ=2.000081642593558E16 σ=5.773008267587691E15 (28.863863077617577 %) rms=2.5773824693523272E16 min=1.0000027724613744E16 max=2.999998258901072E16 sum=2.000081642593558E22]
+stats(ratio): [0: µ=NaN σ=NaN (NaN %) rms=NaN min=NaN max=NaN sum=NaN]
+stats(results):
+PASSING:	1000000
+FAIL_LEFT:	0
+FAIL_RIGHT:	0
+FAIL_BOTH:	0
+FindExtremaAccuracyTest: done
+-------------------
+
