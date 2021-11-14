@@ -24,11 +24,6 @@
  */
 package test;
 
-import java.awt.Shape;
-import java.awt.geom.CubicCurve2D;
-import java.awt.geom.PathIterator;
-import java.awt.geom.QuadCurve2D;
-import java.awt.geom.Rectangle2D;
 import java.math.BigDecimal;
 import static java.math.BigDecimal.ONE;
 import static java.math.BigDecimal.ZERO;
@@ -51,14 +46,14 @@ import org.marlin.math.util.WelfordVariance;
 public class FindExtremaAccuracyTest extends BaseTest {
 
     private final static CurveType TEST_TYPE = CurveType.CUBIC;
-    private final static TestDiff TEST_MODE = TestDiff.EDGE_OR; // DIST
+    private final static TestDiff TEST_MODE = TestDiff.DIST; // EDGE_OR or DIST
+
+    private final static boolean QUIET_RUN = true;
 
     private final static boolean DEBUG = false;
     private final static boolean TRACE = false;
 
     private final static boolean DEBUG_QUAD_SOLVER = false;
-
-    private final static boolean USE_PATH_ITER = false;
 
     private final static int N = 1000000;
     private final static int M = N / 10;
@@ -93,56 +88,55 @@ public class FindExtremaAccuracyTest extends BaseTest {
     public static void main(String[] args) {
         System.out.println("-------------------");
         System.out.println(FindExtremaAccuracyTest.class.getSimpleName() + ": start");
-        System.out.println("USE_PATH_ITER: " + USE_PATH_ITER);
-        System.out.println("N: " + N);
+        System.out.println("N:         " + N);
 
         CurveType ctype = TEST_TYPE;
-        System.out.println("TYPE: " + ctype);
+        System.out.println("TYPE:      " + ctype);
         System.out.println("TEST_MODE: " + TEST_MODE);
+
+        System.out.println("QUIET_RUN: " + QUIET_RUN);
+        System.out.println("DEBUG:     " + DEBUG);
+
+        final FindExtremaContext ctx = new FindExtremaContext();
 
         if (DEBUG) {
             resetStats();
 
             // Bad cubic:
             // t is inacurrate != 0.161:
-            /*
-            tExtrema:   [0.7454713624448268522743715, 0.161]
-            tExtrema_d: [0.7454713624448269, 0.16051708637880857]
-            t: 0.7454713624448269 delta(t): -7.152438593426965E-17 nUlp: -0.6442343956829607
-            t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848E13
-             */
-            test(CurveType.CUBIC, 0, 0.0, 0.0, 2.63209572625E8, 0.3, -4.700001119893978E8, 0.6, 0.0, 1.0);
+            test(CurveType.CUBIC, 0, ctx, 0.0, 2.63209572625E8, -4.700001119893978E8, 0.0);
 
             if (false) {
-                test(ctype, 0, 1e9);
+                test(ctype, ctx, 0, 1e9);
             }
             return;
         }
 
         // original:
-        test(ctype, 0, 10);
-        test(ctype, 0, 1e-6);
-        test(ctype, 0, 1e6);
-        test(ctype, 0, 1e9);
+        test(ctype, ctx, 0, 10);
+        test(ctype, ctx, 0, 1e-6);
+        test(ctype, ctx, 0, 1e6);
+        test(ctype, ctx, 0, 1e9);
 
-        test(ctype, 1e6, 10);
-        test(ctype, 1e6, 1e-3);
-        test(ctype, 1e6, 1e6);
-        test(ctype, 1e6, 1e9);
+        test(ctype, ctx, 1e6, 10);
+        test(ctype, ctx, 1e6, 1e-3);
+        test(ctype, ctx, 1e6, 1e6);
+        test(ctype, ctx, 1e6, 1e9);
 
-        test(ctype, 1e9, 10);
-        test(ctype, 1e9, 1e6);
-        test(ctype, 1e9, 1e9);
+        test(ctype, ctx, 1e9, 10);
+        test(ctype, ctx, 1e9, 1e6);
+        test(ctype, ctx, 1e9, 1e9);
 
         // test scaling:
         for (double scale = 1e6; scale <= 1e16; scale *= 10.0) {
-            test(ctype, scale, scale);
+            test(ctype, ctx, scale, scale);
         }
         System.out.println(FindExtremaAccuracyTest.class.getSimpleName() + ": done");
         System.out.println("-------------------");
     }
 
-    private static void test(CurveType ctype, final double off, final double rng) {
+    private static void test(CurveType ctype, final FindExtremaContext ctx,
+                             final double off, final double rng) {
         System.out.println("-------------------");
         System.out.println("offset value: " + off);
         System.out.println("random scale: " + rng);
@@ -153,7 +147,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
         final Random random = new Random(0L);
 
         for (int n = 0; n < N; n++) {
-            test(ctype, n, random, off, rng);
+            test(ctype, ctx, n, random, off, rng);
 
             if (n % M == 0) {
                 System.out.println("Iteration " + n + " ---");
@@ -192,86 +186,62 @@ public class FindExtremaAccuracyTest extends BaseTest {
         }
     }
 
-    private static void test(CurveType ctype, int trial, Random random, final double off, final double rng) {
+    private static void test(CurveType ctype, final FindExtremaContext ctx, int trial,
+                             Random random, final double off, final double rng) {
         final double half = rng / 2.0;
         double x0 = off;
         double cx1 = off + (random.nextDouble() * rng - half);
         double cx2 = off + (random.nextDouble() * rng - half);
         double x3 = off;
 
-        double y0 = 0.0;
-        double cy1 = 0.3;
-        double cy2 = 0.6;
-        double y3 = 1.0;
-
-        test(ctype, trial, x0, y0, cx1, cy1, cx2, cy2, x3, y3);
+        test(ctype, trial, ctx, x0, cx1, cx2, x3);
     }
 
-    private static void test(CurveType ctype, int trial,
-                             double x0, double y0,
-                             double cx1, double cy1,
-                             double cx2, double cy2,
-                             double x3, double y3) {
+    private static void test(final CurveType ctype, final int trial,
+                             final FindExtremaContext ctx,
+                             final double x1, final double x2, final double x3, final double x4) {
 
         // The incoming data from a PathIterator is always represented by doubles, so that needs
         // to be where we start. (That is: if there's machine error already baked into those
         // doubles, then that's not something we can control for or accommodate.)
         // ... but everything that follows can, technically be calculated in really high precision:
-        final BigDecimal[] coeff = new BigDecimal[4];
-        final BigDecimal[] deriv_coeff = new BigDecimal[3];
-        final BigDecimal[] tExtrema = new BigDecimal[2];
-        final BigDecimal[] xExtrema = new BigDecimal[2];
-
         // BigDecimal high-accuracy implementation (ref):
         switch (ctype) {
             case QUAD:
-                findExtrema(x0, cx1, x3, coeff, deriv_coeff, tExtrema, xExtrema);
+                findExtrema_d(ctx, x1, x2, x4);
+
+                findExtrema(ctx, x1, x2, x4);
                 break;
             default:
             case CUBIC:
-                findExtrema(x0, cx1, cx2, x3, coeff, deriv_coeff, tExtrema, xExtrema);
+                findExtrema_d(ctx, x1, x2, x3, x4);
+
+                if (DEBUG) {
+                    findExtremaWithDblCoeffs(ctx, x1, x2, x3, x4);
+                } else {
+                    findExtrema(ctx, x1, x2, x3, x4);
+                }
                 break;
         }
+
+        // Get results through the context:
+        final BigDecimal[] coeff = ctx.coeff;
+        final BigDecimal[] deriv_coeff = ctx.deriv_coeff;
+        final BigDecimal[] tExtrema = ctx.tExtrema;
+        final BigDecimal[] xExtrema = ctx.xExtrema;
+
+        final double[] coeff_d = ctx.coeff_d;
+        final double[] deriv_coeff_d = ctx.deriv_coeff_d;
+        final double[] tExtrema_d = ctx.tExtrema_d;
+        final double[] xExtrema_d = ctx.xExtrema_d;
 
         final BigDecimal minX = xExtrema[0];
         final BigDecimal maxX = xExtrema[1];
 
-        final double[] coeff_d = new double[4];
-        final double[] deriv_coeff_d = new double[3];
-        final double[] tExtrema_d = new double[2];
-        final double[] xExtrema_d = new double[2];
+        final double minX_d = xExtrema_d[0];
+        final double maxX_d = xExtrema_d[1];
 
-        final double minX_d;
-        final double maxX_d;
-
-        if (!USE_PATH_ITER) {
-            switch (ctype) {
-                case QUAD:
-                    findExtrema_d(x0, cx1, x3, coeff_d, deriv_coeff_d, tExtrema_d, xExtrema_d);
-                    break;
-                default:
-                case CUBIC:
-                    findExtrema_d(x0, cx1, cx2, x3, coeff_d, deriv_coeff_d, tExtrema_d, xExtrema_d);
-                    break;
-            }
-            minX_d = xExtrema_d[0];
-            maxX_d = xExtrema_d[1];
-        } else {
-            final Shape curve;
-            switch (ctype) {
-                case QUAD:
-                    curve = new QuadCurve2D.Double(x0, y0, cx1, cy1, x3, y3);
-                    break;
-                default:
-                case CUBIC:
-                    curve = new CubicCurve2D.Double(x0, y0, cx1, cy1, cx2, cy2, x3, y3);
-                    break;
-            }
-            final Rectangle2D r = getBounds2D(curve.getPathIterator(null));
-            minX_d = r.getMinX();
-            maxX_d = r.getMaxX();
-        }
-
+        // Compare results:
         final BigDecimal obsMinX = new BigDecimal(minX_d);
         final BigDecimal obsMaxX = new BigDecimal(maxX_d);
 
@@ -279,14 +249,18 @@ public class FindExtremaAccuracyTest extends BaseTest {
         final boolean badMax = obsMaxX.compareTo(maxX) < 0;
 
         final Result result;
-        if (badMin && badMax) {
+        if (DEBUG) {
             result = Result.FAIL_BOTH;
-        } else if (badMin) {
-            result = Result.FAIL_LEFT;
-        } else if (badMax) {
-            result = Result.FAIL_RIGHT;
         } else {
-            result = Result.PASSING;
+            if (badMin && badMax) {
+                result = Result.FAIL_BOTH;
+            } else if (badMin) {
+                result = Result.FAIL_LEFT;
+            } else if (badMax) {
+                result = Result.FAIL_RIGHT;
+            } else {
+                result = Result.PASSING;
+            }
         }
         // update result stats:
         results.get(result).incrementAndGet();
@@ -342,14 +316,13 @@ public class FindExtremaAccuracyTest extends BaseTest {
             ulpXStats.add(nUlp);
         }
 
-        if (!TRACE && (delta <= ucond)) {
+        if (QUIET_RUN || (!TRACE && (delta <= ucond))) {
             // test OK
             return;
         }
 
         System.out.println("Examining (trial #" + trial + "), " + result + ", "
-                + (ctype == CurveType.QUAD ? toString(x0, y0, cx1, cy1, 0.0, 0.0, x3, y3)
-                        : toString(x0, y0, cx1, cy1, cx2, cy2, x3, y3))
+                + (ctype == CurveType.QUAD ? toString(x1, x2, 0.0, x4) : toString(x1, x2, x3, x4))
         );
 
         System.out.println("Cond number:\t" + cond + "\tulp: " + ucond);
@@ -358,14 +331,37 @@ public class FindExtremaAccuracyTest extends BaseTest {
         System.out.println("delta:\t" + delta);
         System.out.println("cond KO:\t" + (delta / ucond));
 
-        System.out.println("coeff[3]: " + coeff[3]);
-        System.out.println("coeff[2]: " + coeff[2]);
-        System.out.println("coeff[1]: " + coeff[1]);
-        System.out.println("coeff[0]: " + coeff[0]);
+        // Check parameters:
+        System.out.println("----");
+        System.out.println("coeffs:   " + Arrays.toString(coeff));
+        System.out.println("coeffs_d: " + Arrays.toString(coeff_d));
 
-        System.out.println("dcoeff[2]: " + deriv_coeff[2]);
-        System.out.println("dcoeff[1]: " + deriv_coeff[1]);
-        System.out.println("dcoeff[0]: " + deriv_coeff[0]);
+        for (int i = 0; i < 4; i++) {
+            final BigDecimal bd = new BigDecimal(coeff_d[i]);
+            final String bStr = toUniformString(coeff[i]);
+            final String dStr = toComparisonString(bd, bStr);
+            System.out.println("coeffs[" + i + "]: Exp: " + bStr);
+            System.out.println("coeffs[" + i + "]: Dbl: " + dStr);
+
+            final double diff = coeff[i].subtract(bd).doubleValue();
+            final double nUlp = diff / Math.ulp(coeff_d[i]);
+            System.out.println("delta: " + diff + " nUlp: " + nUlp);
+        }
+
+        System.out.println("dcoeff:   " + Arrays.toString(deriv_coeff));
+        System.out.println("dcoeff_d: " + Arrays.toString(deriv_coeff_d));
+
+        for (int i = 0; i < 3; i++) {
+            final BigDecimal bd = new BigDecimal(deriv_coeff_d[i]);
+            final String bStr = toUniformString(deriv_coeff[i]);
+            final String dStr = toComparisonString(bd, bStr);
+            System.out.println("dcoeff[" + i + "]: Exp: " + bStr);
+            System.out.println("dcoeff[" + i + "]: Dbl: " + dStr);
+
+            final double diff = deriv_coeff[i].subtract(bd).doubleValue();
+            final double nUlp = diff / Math.ulp(deriv_coeff_d[i]);
+            System.out.println("delta: " + diff + " nUlp: " + nUlp);
+        }
 
         System.out.println("tExtrema:   " + Arrays.toString(tExtrema));
         System.out.println("tExtrema_d: " + Arrays.toString(tExtrema_d));
@@ -373,11 +369,38 @@ public class FindExtremaAccuracyTest extends BaseTest {
         for (int i = 0; i < 2; i++) {
             final BigDecimal t = tExtrema[i];
             if (t != null) {
-                final double deltaT = t.subtract(new BigDecimal(tExtrema_d[i])).doubleValue();
+                final BigDecimal bd = new BigDecimal(tExtrema_d[i]);
+                final String bStr = toUniformString(t);
+                final String dStr = toComparisonString(bd, bStr);
+                System.out.println("tExtrema[" + i + "]: Exp: " + bStr);
+                System.out.println("tExtrema[" + i + "]: Dbl: " + dStr);
+
+                final double deltaT = t.subtract(bd).doubleValue();
                 final double nUlpT = deltaT / Math.ulp(tExtrema_d[i]);
                 System.out.println("t: " + tExtrema_d[i] + " delta(t): " + deltaT + " nUlp: " + nUlpT);
             }
         }
+
+        System.out.println("xExtrema:   " + Arrays.toString(xExtrema));
+        System.out.println("xExtrema_d: " + Arrays.toString(xExtrema_d));
+
+        for (int i = 0; i < 2; i++) {
+            final BigDecimal t = xExtrema[i];
+            if (t != null) {
+                final BigDecimal bd = new BigDecimal(xExtrema_d[i]);
+                final String bStr = toUniformString(t);
+                final String dStr = toComparisonString(bd, bStr);
+                System.out.println("xExtrema[" + i + "]: Exp: " + bStr);
+                System.out.println("xExtrema[" + i + "]: Dbl: " + dStr);
+
+                final double deltaT = t.subtract(bd).doubleValue();
+                final double nUlpT = deltaT / Math.ulp(xExtrema_d[i]);
+                System.out.println("x: " + xExtrema_d[i] + " delta(t): " + deltaT + " nUlp: " + nUlpT);
+            }
+        }
+
+        System.out.println("----");
+        System.out.println("xExtrema bad:");
 
         final String leftStr = toUniformString(minX);
         final String rightStr = toUniformString(maxX);
@@ -419,14 +442,33 @@ public class FindExtremaAccuracyTest extends BaseTest {
         }
     }
 
+    // Find Extrema context
+    private static final class FindExtremaContext {
+
+        final double[] coeff_d = new double[4];
+        final double[] deriv_coeff_d = new double[3];
+        final double[] tExtrema_d = new double[2];
+        final double[] xExtrema_d = new double[2];
+
+        final BigDecimal[] coeff = new BigDecimal[4];
+        final BigDecimal[] deriv_coeff = new BigDecimal[3];
+        final BigDecimal[] tExtrema = new BigDecimal[2];
+        final BigDecimal[] xExtrema = new BigDecimal[2];
+    }
+
     // Find Extrema implementations (High-Accuracy) based on BigDecimal
     private final static BigDecimal TWO = new BigDecimal(2.0);
     private final static BigDecimal THREE = new BigDecimal(3.0);
     private final static BigDecimal HALF_NEG = new BigDecimal(-0.5);
 
-    private static void findExtrema(final double x1, final double x2, final double x3,
-                                    final BigDecimal[] coeff, final BigDecimal[] deriv_coeff,
-                                    final BigDecimal[] tExtrema, final BigDecimal[] range) {
+    private static void findExtrema(final FindExtremaContext ctx,
+                                    final double x1, final double x2, final double x3) {
+
+        final BigDecimal[] coeff = ctx.coeff;
+        final BigDecimal[] deriv_coeff = ctx.deriv_coeff;
+        final BigDecimal[] tExtrema = ctx.tExtrema;
+        final BigDecimal[] range = ctx.xExtrema;
+
         // Quad
         final BigDecimal bx1 = new BigDecimal(x1);
         final BigDecimal bx2 = new BigDecimal(x2);
@@ -471,9 +513,14 @@ public class FindExtremaAccuracyTest extends BaseTest {
         range[1] = maxX;
     }
 
-    private static void findExtrema(final double x1, final double x2, final double x3, final double x4,
-                                    final BigDecimal[] coeff, final BigDecimal[] deriv_coeff,
-                                    final BigDecimal[] tExtrema, final BigDecimal[] range) {
+    private static void findExtrema(final FindExtremaContext ctx,
+                                    final double x1, final double x2, final double x3, final double x4) {
+
+        final BigDecimal[] coeff = ctx.coeff;
+        final BigDecimal[] deriv_coeff = ctx.deriv_coeff;
+        final BigDecimal[] tExtrema = ctx.tExtrema;
+        final BigDecimal[] range = ctx.xExtrema;
+
         // Cubic
         final BigDecimal bx1 = new BigDecimal(x1);
         final BigDecimal bx2 = new BigDecimal(x2);
@@ -490,6 +537,53 @@ public class FindExtremaAccuracyTest extends BaseTest {
         deriv_coeff[2] = coeff[3].multiply(THREE);
         deriv_coeff[1] = coeff[2].multiply(TWO);
         deriv_coeff[0] = coeff[1];
+
+        tExtrema[0] = null;
+        tExtrema[1] = null;
+        final int tExtremaCount = solveQuadratic(deriv_coeff, tExtrema);
+
+        BigDecimal minX = bx1;
+        BigDecimal maxX = bx1;
+
+        for (int i = 0; i < tExtremaCount; i++) {
+            final BigDecimal t = tExtrema[i];
+
+            if ((t.compareTo(ZERO) > 0) && (t.compareTo(ONE) < 0)) {
+                final BigDecimal x = coeff[0].add(t.multiply(coeff[1].add(t.multiply(coeff[2].add(t.multiply(coeff[3]))))));
+                if (x.compareTo(minX) < 0) {
+                    minX = x;
+                }
+                if (x.compareTo(maxX) > 0) {
+                    maxX = x;
+                }
+            }
+        }
+        range[0] = minX;
+        range[1] = maxX;
+    }
+
+    private static void findExtremaWithDblCoeffs(final FindExtremaContext ctx,
+                                                 final double x1, final double x2, final double x3, final double x4) {
+
+        final BigDecimal[] coeff = ctx.coeff;
+        final BigDecimal[] deriv_coeff = ctx.deriv_coeff;
+        final BigDecimal[] tExtrema = ctx.tExtrema;
+        final BigDecimal[] range = ctx.xExtrema;
+
+        final double[] coeff_d = ctx.coeff_d;
+        final double[] deriv_coeff_d = ctx.deriv_coeff_d;
+
+        // Cubic
+        final BigDecimal bx1 = new BigDecimal(x1);
+
+        coeff[3] = new BigDecimal(coeff_d[3]);
+        coeff[2] = new BigDecimal(coeff_d[2]);
+        coeff[1] = new BigDecimal(coeff_d[1]);
+        coeff[0] = new BigDecimal(coeff_d[0]);
+
+        deriv_coeff[2] = new BigDecimal(deriv_coeff_d[2]);
+        deriv_coeff[1] = new BigDecimal(deriv_coeff_d[1]);
+        deriv_coeff[0] = new BigDecimal(deriv_coeff_d[0]);
 
         tExtrema[0] = null;
         tExtrema[1] = null;
@@ -569,9 +663,14 @@ public class FindExtremaAccuracyTest extends BaseTest {
     }
 
     // Find Extrema implementations (Low-Accuracy) based on double primitive type (64bits)
-    private static void findExtrema_d(final double x1, final double x2, final double x3,
-                                      final double[] coeff, final double[] deriv_coeff,
-                                      final double[] tExtrema, final double[] range) {
+    private static void findExtrema_d(final FindExtremaContext ctx,
+                                      final double x1, final double x2, final double x3) {
+
+        final double[] coeff = ctx.coeff_d;
+        final double[] deriv_coeff = ctx.deriv_coeff_d;
+        final double[] tExtrema = ctx.tExtrema_d;
+        final double[] range = ctx.xExtrema_d;
+
         // Quad
         final double dx21 = (x2 - x1);
         coeff[3] = 0.0; // useless 
@@ -612,9 +711,14 @@ public class FindExtremaAccuracyTest extends BaseTest {
         range[1] = maxX;
     }
 
-    private static void findExtrema_d(final double x1, final double x2, final double x3, final double x4,
-                                      final double[] coeff, final double[] deriv_coeff,
-                                      final double[] tExtrema, final double[] range) {
+    private static void findExtrema_d(final FindExtremaContext ctx,
+                                      final double x1, final double x2, final double x3, final double x4) {
+
+        final double[] coeff = ctx.coeff_d;
+        final double[] deriv_coeff = ctx.deriv_coeff_d;
+        final double[] tExtrema = ctx.tExtrema_d;
+        final double[] range = ctx.xExtrema_d;
+
         // Cubic
         final double dx32 = 3.0 * (x3 - x2);
         final double dx21 = 3.0 * (x2 - x1);
@@ -651,8 +755,10 @@ public class FindExtremaAccuracyTest extends BaseTest {
         range[1] = maxX;
     }
 
+    private final static double[] disc_err = new double[2];
+
     // Copied from QuadCurve2D.solveQuadratic
-    public static int solveQuadratic(double[] eqn, double[] res) {
+    public static int solveQuadratic(final double[] eqn, final double[] res) {
         double a = eqn[2];
         double b = eqn[1];
         double c = eqn[0];
@@ -666,20 +772,25 @@ public class FindExtremaAccuracyTest extends BaseTest {
             }
             res[roots++] = -c / b;
         } else {
+            if (false && DEBUG) {
+                /* LBO: Scaling equation to have (1).t^2 + (b/a).t + (c / a) = 0 */
+                // bad idea => shift results by +1 ulp
+                b /= a;
+                c /= a;
+                a = 1.0;
+            }
             // From Numerical Recipes, 5.6, Quadratic and Cubic Equations
             double d = b * b - 4.0 * a * c;
             if (DEBUG_QUAD_SOLVER) {
                 System.out.println("d:      " + d);
                 d += Math.ulp(d);
                 System.out.println("d+1ulp: " + d);
-            }
-            /*
-            double d_alt = diff_of_products(b, b, a * 4.0, c);
-            double d_alt2 = diff_of_products(b, b, a, c * 4.0);
 
-            System.out.println("d_alt : " + d_alt);
-            System.out.println("d_alt2: " + d_alt2);
-             */
+                diff_of_products(b, b, a * 4.0, c, disc_err);
+                System.out.println("d_alt:     " + disc_err[0]);
+                System.out.println("d_alt_err: " + disc_err[1]);
+            }
+
             if (d < 0.0) {
                 // If d < 0.0, then there are no roots
                 return 0;
@@ -687,6 +798,28 @@ public class FindExtremaAccuracyTest extends BaseTest {
             d = Math.sqrt(d);
             if (DEBUG_QUAD_SOLVER) {
                 System.out.println("sqrt(d): " + d);
+                if (false) {
+                    final double fixed_d;
+                    if (true) {
+                        // SQRT(D + eps) = SQRT(D) + (eps / (2 SQRT(D) + 1) )
+                        final double sqrt_eps = (0.5 * disc_err[1] / (1.0 + d));
+                        System.out.println("sqrt_eps: " + sqrt_eps);
+                        fixed_d = d + sqrt_eps;
+                    } else {
+                        // no precision
+                        final double eps = (disc_err[1] / disc_err[0]);
+                        System.out.println("eps: " + eps);
+
+                        final double epsp1 = 1.0 + eps;
+                        System.out.println("epsp1: " + epsp1);
+
+                        final double err_sqrt = Math.sqrt(epsp1);
+                        System.out.println("err_sqrt: " + err_sqrt);
+                        fixed_d = d * err_sqrt;
+                    }
+                    System.out.println("fixed_d: " + fixed_d);
+                    System.out.println("delta_d: " + (fixed_d - d));
+                }
                 System.out.println("b:       " + b);
             }
             // For accuracy, calculate one root using:
@@ -700,6 +833,9 @@ public class FindExtremaAccuracyTest extends BaseTest {
 
             // double q = (b + d) / -2.0;
             double q = -0.5 * (b + d); // no div
+            if (DEBUG_QUAD_SOLVER) {
+                System.out.println("q: " + q);
+            }
             /*
             double q = (b + d) / -2.0;
             t: 0.7454713624448269 delta(t): -7.152438643426965E-17 nUlp: -0.6442344001865603
@@ -710,12 +846,68 @@ public class FindExtremaAccuracyTest extends BaseTest {
             t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848
              */
             // We already tested a for being 0 above
-            res[roots++] = q / a;
+            final double r = q / a; // first root (bigger in magnitude)
+            res[roots++] = r;
             if (q != 0.0) {
-                res[roots++] = c / q;
+                final double r2 = c / q;
+                res[roots++] = r2;
+
+                if (DEBUG_QUAD_SOLVER) {
+                    System.out.println("r2: " + r2);
+
+                    System.out.println("b2: " + (b * b));
+                    System.out.println("b2-4ac: " + (b * b - 4.0 * a * c));
+                    System.out.println("Same magnitude ?");
+
+                    // use vieta formula: x1*x2 = c / a
+                    final double r2_alt = (c / a) / r;
+                    System.out.println("r2_alt: " + r2_alt);
+                    System.out.println("delta_r: " + (r2_alt - r2));
+
+                    final double r2_alt2 = c / (a * r);
+                    System.out.println("r2_alt2: " + r2_alt2);
+                    System.out.println("delta_r2: " + (r2_alt2 - r2));
+                }
+            }
+
+            if (DEBUG_QUAD_SOLVER) {
+                checkRoots(eqn, res, roots);
             }
         }
         return roots;
+    }
+
+    static void checkRoots(final double[] eqn, final double[] res, final int roots) {
+        // Check precision:
+        for (int i = 0; i < roots; i++) {
+            final double t = res[i];
+            final double xt = quadraticPolynom(eqn, t);
+            System.out.println("t[" + i + "]: " + t + " x(t) = " + xt);
+
+            final double eps = xt - 0.0;
+            System.out.println("eps(x): " + eps);
+
+            if (true || (eps != +0.0) && (eps != -0.0)) {
+                final double dxt = quadraticDerivedPolynom(eqn, t);
+                System.out.println("t[" + i + "]: " + t + " x(t) = " + xt + " dx(t) = " + dxt);
+
+                final double u = Math.ulp(t);
+
+                for (int j = -5; j <= 5; j++) {
+                    final double te = t + u * j;
+                    final double xte = quadraticPolynom(eqn, te);
+                    System.out.println("t[" + j + " ulp]: " + te + " x(t) = " + xte + " (xt > 0.0): " + (xte > 0.0));
+                }
+            }
+        }
+    }
+
+    static double quadraticPolynom(final double[] eqn, final double t) {
+        return eqn[0] + t * (eqn[1] + t * (eqn[2]));
+    }
+
+    static double quadraticDerivedPolynom(final double[] eqn, final double t) {
+        return eqn[1] + t * (2.0 * eqn[2]);
     }
 
     /*
@@ -726,226 +918,22 @@ public class FindExtremaAccuracyTest extends BaseTest {
      * of 2x2 Determinants". Mathematics of Computation, Vol. 82, No. 284, 
      * Oct. 2013, pp. 2245-2264
      */
-    static double diff_of_products(double a, double b, double c, double d) {
+    static void diff_of_products(final double a, final double b,
+                                 final double c, final double d,
+                                 final double[] val_err) {
         double w = d * c;
         double e = Math.fma(-d, c, w);
         double f = Math.fma(a, b, -w);
-        return f + e;
-    }
+        val_err[0] = f + e;
+        // kahan sum:
+        // final double t = f + e;
+        // e = (t - f) - e;
+        // val_err[1] = (val_err[0] - f) - e;
+        val_err[1] = e; // + or - e ?
 
-    /**
-     * Returns a high precision bounding box of the specified PathIterator.
-     * <p>
-     * This method provides a basic facility for implementors of the {@link Shape} interface to
-     * implement support for the {@link Shape#getBounds2D()} method.
-     * </p>
-     * @param pi path iterator
-     * @return an instance of {@code Rectangle2D} that is a high-precision bounding box of the
-     *         {@code PathIterator}.
-     * @see Shape#getBounds2D()
-     */
-    public static Rectangle2D getBounds2D(final PathIterator pi) {
-        // define x and y parametric coefficients where:
-        // x(t) = x_coeff[0] + x_coeff[1] * t + x_coeff[2] * t^2 + x_coeff[3] * t^3
-        final double[] x_coeff = new double[4];
-        final double[] y_coeff = new double[4];
-
-        // define the derivative's coefficients
-        final double[] x_deriv_coeff = new double[3];
-        final double[] y_deriv_coeff = new double[3];
-
-        final double[] coords = new double[6];
-        final double[] tExtrema = new double[2];
-        boolean isDefined = false;
-        double leftX = 0.0;
-        double rightX = 0.0;
-        double topY = 0.0;
-        double bottomY = 0.0;
-        double lastX = 0.0;
-        double lastY = 0.0;
-
-        for (; !pi.isDone(); pi.next()) {
-            int type = pi.currentSegment(coords);
-            switch (type) {
-                case PathIterator.SEG_MOVETO:
-                    if (!isDefined) {
-                        isDefined = true;
-                        leftX = rightX = coords[0];
-                        topY = bottomY = coords[1];
-                    } else {
-                        if (coords[0] < leftX) {
-                            leftX = coords[0];
-                        }
-                        if (coords[0] > rightX) {
-                            rightX = coords[0];
-                        }
-                        if (coords[1] < topY) {
-                            topY = coords[1];
-                        }
-                        if (coords[1] > bottomY) {
-                            bottomY = coords[1];
-                        }
-                    }
-                    lastX = coords[0];
-                    lastY = coords[1];
-                    break;
-                case PathIterator.SEG_LINETO:
-                    if (coords[0] < leftX) {
-                        leftX = coords[0];
-                    }
-                    if (coords[0] > rightX) {
-                        rightX = coords[0];
-                    }
-                    if (coords[1] < topY) {
-                        topY = coords[1];
-                    }
-                    if (coords[1] > bottomY) {
-                        bottomY = coords[1];
-                    }
-                    lastX = coords[0];
-                    lastY = coords[1];
-                    break;
-                case PathIterator.SEG_QUADTO:
-                    if (coords[2] < leftX) {
-                        leftX = coords[2];
-                    }
-                    if (coords[2] > rightX) {
-                        rightX = coords[2];
-                    }
-                    if (coords[3] < topY) {
-                        topY = coords[3];
-                    }
-                    if (coords[3] > bottomY) {
-                        bottomY = coords[3];
-                    }
-
-                    if (coords[0] < leftX || coords[0] > rightX) {
-                        final double dx21 = (coords[0] - lastX);
-                        x_coeff[2] = (coords[2] - coords[0]) - dx21;  // A = P3 - P0 - 2 P2
-                        x_coeff[1] = 2.0 * dx21;                      // B = 2 (P2 - P1)
-                        x_coeff[0] = lastX;                           // C = P1
-
-                        x_deriv_coeff[0] = x_coeff[1];
-                        x_deriv_coeff[1] = 2.0 * x_coeff[2];
-
-                        final double t = -x_deriv_coeff[0] / x_deriv_coeff[1];
-
-                        if (t > 0.0 && t < 1.0) {
-                            double x = x_coeff[0] + t * (x_coeff[1] + t * x_coeff[2]);
-                            if (x < leftX) {
-                                leftX = x;
-                            }
-                            if (x > rightX) {
-                                rightX = x;
-                            }
-                        }
-                    }
-                    if (coords[1] < topY || coords[1] > bottomY) {
-                        final double dy21 = (coords[1] - lastY);
-                        y_coeff[2] = (coords[3] - coords[1]) - dy21;
-                        y_coeff[1] = 2.0 * dy21;
-                        y_coeff[0] = lastY;
-
-                        y_deriv_coeff[0] = y_coeff[1];
-                        y_deriv_coeff[1] = 2.0 * y_coeff[2];
-
-                        final double t = -y_deriv_coeff[0] / y_deriv_coeff[1];
-
-                        if (t > 0.0 && t < 1.0) {
-                            double y = y_coeff[0] + t * (y_coeff[1] + t * y_coeff[2]);
-                            if (y < topY) {
-                                topY = y;
-                            }
-                            if (y > bottomY) {
-                                bottomY = y;
-                            }
-                        }
-                    }
-                    lastX = coords[2];
-                    lastY = coords[3];
-                    break;
-                case PathIterator.SEG_CUBICTO:
-                    if (coords[4] < leftX) {
-                        leftX = coords[4];
-                    }
-                    if (coords[4] > rightX) {
-                        rightX = coords[4];
-                    }
-                    if (coords[5] < topY) {
-                        topY = coords[5];
-                    }
-                    if (coords[5] > bottomY) {
-                        bottomY = coords[5];
-                    }
-
-                    if (coords[0] < leftX || coords[0] > rightX || coords[2] < leftX || coords[2] > rightX) {
-                        final double dx32 = 3.0 * (coords[2] - coords[0]);
-                        final double dx21 = 3.0 * (coords[0] - lastX);
-                        x_coeff[3] = (coords[4] - lastX) - dx32;  // A = P3 - P0 - 3 (P2 - P1) = (P3 - P0) + 3 (P1 - P2)
-                        x_coeff[2] = (dx32 - dx21);               // B = 3 (P2 - P1) - 3(P1 - P0) = 3 (P2 + P0) - 6 P1
-                        x_coeff[1] = dx21;                        // C = 3 (P1 - P0)
-                        x_coeff[0] = lastX;                       // D = P0
-
-                        x_deriv_coeff[0] = x_coeff[1];
-                        x_deriv_coeff[1] = 2.0 * x_coeff[2];
-                        x_deriv_coeff[2] = 3.0 * x_coeff[3];
-
-                        final int tExtremaCount = QuadCurve2D.solveQuadratic(x_deriv_coeff, tExtrema);
-
-                        for (int i = 0; i < tExtremaCount; i++) {
-                            final double t = tExtrema[i];
-                            if (t > 0.0 && t < 1.0) {
-                                final double x = x_coeff[0] + t * (x_coeff[1] + t * (x_coeff[2] + t * x_coeff[3]));
-                                if (x < leftX) {
-                                    leftX = x;
-                                }
-                                if (x > rightX) {
-                                    rightX = x;
-                                }
-                            }
-                        }
-                    }
-                    if (coords[1] < topY || coords[1] > bottomY || coords[3] < topY || coords[3] > bottomY) {
-                        final double dy32 = 3.0 * (coords[3] - coords[1]);
-                        final double dy21 = 3.0 * (coords[1] - lastY);
-                        y_coeff[3] = (coords[5] - lastY) - dy32;
-                        y_coeff[2] = (dy32 - dy21);
-                        y_coeff[1] = dy21;
-                        y_coeff[0] = lastY;
-
-                        y_deriv_coeff[0] = y_coeff[1];
-                        y_deriv_coeff[1] = 2.0 * y_coeff[2];
-                        y_deriv_coeff[2] = 3.0 * y_coeff[3];
-
-                        final int tExtremaCount = QuadCurve2D.solveQuadratic(y_deriv_coeff, tExtrema);
-
-                        for (int i = 0; i < tExtremaCount; i++) {
-                            final double t = tExtrema[i];
-                            if (t > 0.0 && t < 1.0) {
-                                final double y = y_coeff[0] + t * (y_coeff[1] + t * (y_coeff[2] + t * y_coeff[3]));
-                                if (y < topY) {
-                                    topY = y;
-                                }
-                                if (y > bottomY) {
-                                    bottomY = y;
-                                }
-                            }
-                        }
-                    }
-                    lastX = coords[4];
-                    lastY = coords[5];
-                    break;
-                case PathIterator.SEG_CLOSE:
-                default:
-            }
+        if (DEBUG_QUAD_SOLVER) {
+            System.out.println("diff_of_products: " + Arrays.toString(val_err));
         }
-        if (isDefined) {
-            return new Rectangle2D.Double(leftX, topY, rightX - leftX, bottomY - topY);
-        }
-
-        // there's room to debate what should happen here, but historically we return a zeroed
-        // out rectangle here. So for backwards compatibility let's keep doing that:
-        return new Rectangle2D.Double();
     }
 
     private FindExtremaAccuracyTest() {
