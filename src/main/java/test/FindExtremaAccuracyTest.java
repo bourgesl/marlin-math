@@ -48,12 +48,11 @@ public class FindExtremaAccuracyTest extends BaseTest {
     private final static CurveType TEST_TYPE = CurveType.CUBIC;
     private final static TestDiff TEST_MODE = TestDiff.DIST; // EDGE_OR or DIST
 
-    private final static boolean QUIET_RUN = true;
-
     private final static boolean DEBUG = false;
-    private final static boolean TRACE = false;
 
     private final static boolean DEBUG_QUAD_SOLVER = false;
+
+    private final static boolean QUIET_RUN = true & !DEBUG;
 
     private final static int N = 1000000;
     private final static int M = N / 10;
@@ -316,7 +315,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
             ulpXStats.add(nUlp);
         }
 
-        if (QUIET_RUN || (!TRACE && (delta <= ucond))) {
+        if (QUIET_RUN || (!DEBUG && (delta <= ucond))) {
             // test OK
             return;
         }
@@ -329,7 +328,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
         System.out.println("deltaMin:\t" + deltaMin);
         System.out.println("deltaMax:\t" + deltaMax);
         System.out.println("delta:\t" + delta);
-        System.out.println("cond KO:\t" + (delta / ucond));
+        System.out.println("Cond[" + ((delta <= ucond) ? "OK" : " KO") + "]:\t" + (delta / ucond));
 
         // Check parameters:
         System.out.println("----");
@@ -613,7 +612,7 @@ public class FindExtremaAccuracyTest extends BaseTest {
     private static int solveQuadratic(final BigDecimal[] eqn, final BigDecimal[] res) {
         final BigDecimal a = eqn[2];
         final BigDecimal b = eqn[1];
-        final BigDecimal c = eqn[0];
+        BigDecimal c = eqn[0];
 
         int roots = 0;
         if (a.equals(ZERO)) {
@@ -651,11 +650,21 @@ public class FindExtremaAccuracyTest extends BaseTest {
             if (b.compareTo(ZERO) < 0) {
                 d = d.negate();
             }
-            final BigDecimal q = HALF_NEG.multiply(b.add(d)); // no div
+            BigDecimal q = HALF_NEG.multiply(b.add(d)); // no div
+            // ensure q has enough decimals for division:
+            q = q.setScale(30, RoundingMode.HALF_EVEN);
+
+            if (DEBUG_QUAD_SOLVER) {
+                System.out.println("a (plain): " + a.toPlainString());
+                System.out.println("c (plain): " + c.toPlainString());
+                System.out.println("q (plain): " + q.toPlainString());
+            }
             // We already tested a for being 0 above
             res[roots++] = q.divide(a, RoundingMode.HALF_EVEN);
 
             if (!q.equals(ZERO)) {
+                // ensure c has enough decimals for division:
+                c = c.setScale(30, RoundingMode.HALF_EVEN);
                 res[roots++] = c.divide(q, RoundingMode.HALF_EVEN);
             }
         }
@@ -835,16 +844,12 @@ public class FindExtremaAccuracyTest extends BaseTest {
             double q = -0.5 * (b + d); // no div
             if (DEBUG_QUAD_SOLVER) {
                 System.out.println("q: " + q);
-            }
-            /*
-            double q = (b + d) / -2.0;
-            t: 0.7454713624448269 delta(t): -7.152438643426965E-17 nUlp: -0.6442344001865603
-            t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848E
 
-            double q = -0.5 * (b + d); // LBO
-            t: 0.7454713624448269 delta(t): -7.152438643426965E-17 nUlp: -0.6442344001865603
-            t: 0.16051708637880857 delta(t): 4.829136211914289E-4 nUlp: 1.7398796835598848
-             */
+                System.out.println("a (dbl): " + a);
+                System.out.println("c (dbl): " + c);
+                System.out.println("q (dbl): " + q);
+            }
+
             // We already tested a for being 0 above
             final double r = q / a; // first root (bigger in magnitude)
             res[roots++] = r;
